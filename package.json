@@ -1,6 +1,6 @@
 {
   "name": "@lulliecat/svg2ttf",
-  "version": "6.0.4",
+  "version": "6.0.5",
   "type": "module",
   "description": "Converts SVG font to TTF font",
   "publishConfig": {
