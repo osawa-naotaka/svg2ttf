@@ -1,6 +1,6 @@
 {
   "name": "@lulliecat/svg2ttf",
-  "version": "6.0.4",
+  "version": "6.0.5",
   "type": "module",
   "description": "Converts SVG font to TTF font",
   "publishConfig": {
@@ -43,12 +43,10 @@
     "update_fixture": "./build/svg2ttf.js --ts 1457357570703 test/fixtures/test.svg test/fixtures/test.ttf"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.7.2",
     "argparse": "^2.0.1",
     "cubic2quad": "^1.2.1",
-    "lodash": "^4.17.10",
-    "microbuffer": "^1.0.0",
-    "svgpath": "^2.1.5",
-    "@xmldom/xmldom": "^0.7.2"
+    "svgpath": "^2.1.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.6",
