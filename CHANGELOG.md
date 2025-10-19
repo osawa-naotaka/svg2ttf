@@ -1,3 +1,15 @@
+6.0.4 / 2025-10-19
+------------------
+
+- **Major Project Modernization**:
+  - Restructured directory layout for better maintainability
+  - Updated security vulnerabilities in dependent libraries
+  - Modernized development toolchain (Biome, Vitest, tsup)
+  - Migrated build system to tsup for optimized bundling
+  - Added ESM (ES Modules) support
+  - Published as scoped package: `@lulliecat/svg2ttf`
+
+
 6.0.3 / 2021-08-21
 ------------------
 

@@ -1,28 +1,46 @@
 {
-  "name": "svg2ttf",
-  "version": "6.0.3",
+  "name": "@lulliecat/svg2ttf",
+  "version": "6.0.4",
+  "type": "module",
   "description": "Converts SVG font to TTF font",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "font",
     "ttf",
     "svg",
     "convertor"
   ],
-  "author": "Sergey Batishchev <sergej.batishchev@gmail.com>",
+  "author": "osawa naotaka",
   "license": "MIT",
-  "repository": "fontello/svg2ttf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osawa-naotaka/svg2ttf.git"
+  },
   "bin": {
-    "svg2ttf": "./svg2ttf.js"
+    "svg2ttf": "./build/svg2ttf.js"
+  },
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
   },
   "files": [
-    "index.js",
-    "svg2ttf.js",
-    "lib/"
+    "build"
   ],
   "scripts": {
-    "lint": "eslint .",
-    "test": "npm run lint && mocha",
-    "update_fixture": "./svg2ttf.js --ts 1457357570703 test/fixtures/test.svg test/fixtures/test.ttf"
+    "lint": "biome check ./src",
+    "format": "biome format --write ./src",
+    "test": "bun run lint && bun run build && vitest run",
+    "test:watch": "vitest watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "build": "tsup --config tsup.config.ts",
+    "update_fixture": "./build/svg2ttf.js --ts 1457357570703 test/fixtures/test.svg test/fixtures/test.ttf"
   },
   "dependencies": {
     "argparse": "^2.0.1",
@@ -33,8 +51,14 @@
     "@xmldom/xmldom": "^0.7.2"
   },
   "devDependencies": {
-    "eslint": "^7.0.0",
-    "mocha": "^8.3.2",
-    "opentype.js": "^1.3.3"
+    "@biomejs/biome": "^2.2.6",
+    "@types/argparse": "^2.0.17",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.8.1",
+    "@vitest/ui": "^3.2.4",
+    "opentype.js": "^1.3.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }
