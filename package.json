@@ -29,7 +29,10 @@
   "scripts": {
     "lint": "biome check ./src",
     "format": "biome format --write ./src",
-    "test": "bun run lint && mocha",
+    "test": "bun run lint && bun run build && vitest run",
+    "test:watch": "vitest watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "build": "tsup --config tsup.config.ts",
     "update_fixture": "./build/svg2ttf.js --ts 1457357570703 test/fixtures/test.svg test/fixtures/test.ttf"
   },
@@ -46,9 +49,10 @@
     "@types/argparse": "^2.0.17",
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.8.1",
-    "mocha": "^8.3.2",
+    "@vitest/ui": "^3.2.4",
     "opentype.js": "^1.3.3",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }
