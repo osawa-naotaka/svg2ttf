@@ -15,7 +15,7 @@ function getSegments(font, bounds) {
     var segment;
 
     // prevEndCode only changes when a segment closes
-    _.forEach(font.codePoints, function (glyph, unicode) {
+    _.forEach(font.codePoints, (_glyph, unicode) => {
         unicode = parseInt(unicode, 10);
         if (unicode >= bounds) {
             return false;
@@ -37,7 +37,7 @@ function getSegments(font, bounds) {
         result.push(segment);
     }
 
-    _.forEach(result, function (segment) {
+    _.forEach(result, (segment) => {
         segment.length = segment.end - segment.start + 1;
     });
 
@@ -50,7 +50,7 @@ function getCodePoints(codePoints, bounds) {
 
     var result = [];
 
-    _.forEach(codePoints, function (glyph, unicode) {
+    _.forEach(codePoints, (glyph, unicode) => {
         unicode = parseInt(unicode, 10);
         // Since this is a sparse array, iterating will only yield the valid code points
         if (unicode > bounds) {
@@ -116,7 +116,7 @@ function createFormat4Table(font) {
     var segments = getSegments(font, 0xffff);
     var glyphIndexArrays = [];
 
-    _.forEach(segments, function (segment) {
+    _.forEach(segments, (segment) => {
         var glyphIndexArray = [];
 
         for (var unicode = segment.start; unicode <= segment.end; unicode++) {
@@ -126,13 +126,7 @@ function createFormat4Table(font) {
     });
 
     var segCount = segments.length + 1; // + 1 for the 0xFFFF section
-    var glyphIndexArrayLength = _.reduce(
-        _.map(glyphIndexArrays, "length"),
-        function (result, count) {
-            return result + count;
-        },
-        0,
-    );
+    var glyphIndexArrayLength = _.reduce(_.map(glyphIndexArrays, "length"), (result, count) => result + count, 0);
 
     var length =
         0 +
@@ -151,14 +145,14 @@ function createFormat4Table(font) {
 
     buffer.writeUint16(segCount * 2); // segCountX2
     var maxExponent = Math.floor(Math.log(segCount) / Math.LN2);
-    var searchRange = 2 * Math.pow(2, maxExponent);
+    var searchRange = 2 * 2 ** maxExponent;
 
     buffer.writeUint16(searchRange); // searchRange
     buffer.writeUint16(maxExponent); // entrySelector
     buffer.writeUint16(2 * segCount - searchRange); // rangeShift
 
     // Array of end counts
-    _.forEach(segments, function (segment) {
+    _.forEach(segments, (segment) => {
         buffer.writeUint16(segment.end);
     });
     buffer.writeUint16(0xffff); // endCountArray should be finished with 0xFFFF
@@ -166,7 +160,7 @@ function createFormat4Table(font) {
     buffer.writeUint16(0); // reservedPad
 
     // Array of start counts
-    _.forEach(segments, function (segment) {
+    _.forEach(segments, (segment) => {
         buffer.writeUint16(segment.start); //startCountArray
     });
     buffer.writeUint16(0xffff); // startCountArray should be finished with 0xFFFF
@@ -186,8 +180,8 @@ function createFormat4Table(font) {
     }
     buffer.writeUint16(0); // rangeOffsetArray should be finished with 0
 
-    _.forEach(glyphIndexArrays, function (glyphIndexArray) {
-        _.forEach(glyphIndexArray, function (glyphId) {
+    _.forEach(glyphIndexArrays, (glyphIndexArray) => {
+        _.forEach(glyphIndexArray, (glyphId) => {
             buffer.writeUint16(glyphId);
         });
     });
@@ -210,7 +204,7 @@ function createFormat12Table(font) {
     var buffer = bufferForTable(FORMAT, length);
 
     buffer.writeUint32(codePoints.length); // nGroups
-    _.forEach(codePoints, function (codePoint) {
+    _.forEach(codePoints, (codePoint) => {
         buffer.writeUint32(codePoint.unicode); // startCharCode
         buffer.writeUint32(codePoint.unicode); // endCharCode
         buffer.writeUint32(codePoint.glyph.id); // startGlyphCode
@@ -273,7 +267,7 @@ function createCMapTable(font) {
         tableHeaders.length * TABLE_HEAD;
 
     // Calculate offsets for each table
-    _.forEach(tables, function (table) {
+    _.forEach(tables, (table) => {
         table._tableOffset = tableOffset;
         tableOffset += table.length;
     });
@@ -287,14 +281,14 @@ function createCMapTable(font) {
     buffer.writeUint16(tableHeaders.length); // count
 
     // Write subtable headers
-    _.forEach(tableHeaders, function (header) {
+    _.forEach(tableHeaders, (header) => {
         buffer.writeUint16(header.platformID); // platform
         buffer.writeUint16(header.encodingID); // encoding
         buffer.writeUint32(header.table._tableOffset); // offset
     });
 
     // Write subtables
-    _.forEach(tables, function (table) {
+    _.forEach(tables, (table) => {
         buffer.writeBytes(table.buffer);
     });
 

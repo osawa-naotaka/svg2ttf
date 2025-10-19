@@ -5,25 +5,11 @@ import ByteBuffer from "microbuffer";
 
 // Find max points in glyph TTF contours.
 function getMaxPoints(font) {
-    return _.max(
-        _.map(font.glyphs, function (glyph) {
-            return _.reduce(
-                glyph.ttfContours,
-                function (sum, ctr) {
-                    return sum + ctr.length;
-                },
-                0,
-            );
-        }),
-    );
+    return _.max(_.map(font.glyphs, (glyph) => _.reduce(glyph.ttfContours, (sum, ctr) => sum + ctr.length, 0)));
 }
 
 function getMaxContours(font) {
-    return _.max(
-        _.map(font.glyphs, function (glyph) {
-            return glyph.ttfContours.length;
-        }),
-    );
+    return _.max(_.map(font.glyphs, (glyph) => glyph.ttfContours.length));
 }
 
 function createMaxpTable(font) {

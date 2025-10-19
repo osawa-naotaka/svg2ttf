@@ -17,7 +17,7 @@ function createLocaTable(font) {
     var location = 0;
 
     // Array of offsets in GLYF table for each glyph
-    _.forEach(font.glyphs, function (glyph) {
+    _.forEach(font.glyphs, (glyph) => {
         if (isShortFormat) {
             buf.writeUint16(location);
             location += glyph.ttf_size / 2; // actual location must be divided to 2 in short format

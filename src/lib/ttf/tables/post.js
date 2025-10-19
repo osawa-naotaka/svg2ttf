@@ -7,7 +7,7 @@ function tableSize(font, names) {
     var result = 36; // table header
 
     result += font.glyphs.length * 2; // name declarations
-    _.forEach(names, function (name) {
+    _.forEach(names, (name) => {
         result += name.length;
     });
     return result;
@@ -29,7 +29,7 @@ function pascalString(str) {
 function createPostTable(font) {
     var names = [];
 
-    _.forEach(font.glyphs, function (glyph) {
+    _.forEach(font.glyphs, (glyph) => {
         if (glyph.unicode !== 0) {
             names.push(pascalString(glyph.name));
         }
@@ -51,7 +51,7 @@ function createPostTable(font) {
     // Array of glyph name indexes
     var index = 258; // first index of custom glyph name, it is calculated as glyph name index + 258
 
-    _.forEach(font.glyphs, function (glyph) {
+    _.forEach(font.glyphs, (glyph) => {
         if (glyph.unicode === 0) {
             buf.writeUint16(0); // missed element should have .notDef name in the Macintosh standard order.
         } else {
@@ -60,7 +60,7 @@ function createPostTable(font) {
     });
 
     // Array of glyph name indexes
-    _.forEach(names, function (name) {
+    _.forEach(names, (name) => {
         buf.writeBytes(name);
     });
 

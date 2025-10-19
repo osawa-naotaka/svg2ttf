@@ -68,12 +68,7 @@ function Font() {
         }
         var widths = _.map(this.glyphs, "width");
 
-        return parseInt(
-            widths.reduce(function (prev, cur) {
-                return prev + cur;
-            }) / widths.length,
-            10,
-        );
+        return parseInt(widths.reduce((prev, cur) => prev + cur) / widths.length, 10);
     });
 
     Object.defineProperty(this, "ySubscriptXSize", {
@@ -195,13 +190,7 @@ function Font() {
             if (!this.glyphs.length) return parseInt(this.width, 10);
 
             return parseInt(
-                _.reduce(
-                    this.glyphs,
-                    function (minRsb, glyph) {
-                        return Math.min(minRsb, glyph.width - glyph.xMax);
-                    },
-                    0,
-                ),
+                _.reduce(this.glyphs, (minRsb, glyph) => Math.min(minRsb, glyph.width - glyph.xMax), 0),
                 10,
             );
         },
@@ -211,13 +200,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (xMin, glyph) {
-                    return Math.min(xMin, glyph.xMin);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (xMin, glyph) => Math.min(xMin, glyph.xMin), 0);
         },
     });
 
@@ -225,13 +208,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (yMin, glyph) {
-                    return Math.min(yMin, glyph.yMin);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (yMin, glyph) => Math.min(yMin, glyph.yMin), 0);
         },
     });
 
@@ -239,13 +216,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (xMax, glyph) {
-                    return Math.max(xMax, glyph.xMax);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (xMax, glyph) => Math.max(xMax, glyph.xMax), 0);
         },
     });
 
@@ -253,13 +224,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (yMax, glyph) {
-                    return Math.max(yMax, glyph.yMax);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (yMax, glyph) => Math.max(yMax, glyph.yMax), 0);
         },
     });
 
@@ -271,13 +236,7 @@ function Font() {
                 return this.width;
             }
 
-            var sumWidth = _.reduce(
-                this.glyphs,
-                function (sumWidth, glyph) {
-                    return sumWidth + glyph.width;
-                },
-                0,
-            );
+            var sumWidth = _.reduce(this.glyphs, (sumWidth, glyph) => sumWidth + glyph.width, 0);
 
             return Math.round(sumWidth / len);
         },
@@ -287,13 +246,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (maxWidth, glyph) {
-                    return Math.max(maxWidth, glyph.width);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (maxWidth, glyph) => Math.max(maxWidth, glyph.width), 0);
         },
     });
 
@@ -301,13 +254,7 @@ function Font() {
         get: function () {
             if (!this.glyphs.length) return this.width;
 
-            return _.reduce(
-                this.glyphs,
-                function (maxExtent, glyph) {
-                    return Math.max(maxExtent, glyph.xMax /*- glyph.xMin*/);
-                },
-                0,
-            );
+            return _.reduce(this.glyphs, (maxExtent, glyph) => Math.max(maxExtent, glyph.xMax /*- glyph.xMin*/), 0);
         },
     });
 
@@ -355,8 +302,8 @@ Object.defineProperty(Glyph.prototype, "xMin", {
         var xMin = 0;
         var hasPoints = false;
 
-        _.forEach(this.contours, function (contour) {
-            _.forEach(contour.points, function (point) {
+        _.forEach(this.contours, (contour) => {
+            _.forEach(contour.points, (point) => {
                 xMin = Math.min(xMin, Math.floor(point.x));
                 hasPoints = true;
             });
@@ -365,7 +312,7 @@ Object.defineProperty(Glyph.prototype, "xMin", {
         if (xMin < -32768) {
             throw new Error(
                 "xMin value for glyph " +
-                    (this.name ? '"' + this.name + '"' : JSON.stringify(this.codes)) +
+                    (this.name ? `"${this.name}"` : JSON.stringify(this.codes)) +
                     " is out of bounds (actual " +
                     xMin +
                     ', expected -32768..32767, d="' +
@@ -382,8 +329,8 @@ Object.defineProperty(Glyph.prototype, "xMax", {
         var xMax = 0;
         var hasPoints = false;
 
-        _.forEach(this.contours, function (contour) {
-            _.forEach(contour.points, function (point) {
+        _.forEach(this.contours, (contour) => {
+            _.forEach(contour.points, (point) => {
                 xMax = Math.max(xMax, -Math.floor(-point.x));
                 hasPoints = true;
             });
@@ -392,7 +339,7 @@ Object.defineProperty(Glyph.prototype, "xMax", {
         if (xMax > 32767) {
             throw new Error(
                 "xMax value for glyph " +
-                    (this.name ? '"' + this.name + '"' : JSON.stringify(this.codes)) +
+                    (this.name ? `"${this.name}"` : JSON.stringify(this.codes)) +
                     " is out of bounds (actual " +
                     xMax +
                     ', expected -32768..32767, d="' +
@@ -409,8 +356,8 @@ Object.defineProperty(Glyph.prototype, "yMin", {
         var yMin = 0;
         var hasPoints = false;
 
-        _.forEach(this.contours, function (contour) {
-            _.forEach(contour.points, function (point) {
+        _.forEach(this.contours, (contour) => {
+            _.forEach(contour.points, (point) => {
                 yMin = Math.min(yMin, Math.floor(point.y));
                 hasPoints = true;
             });
@@ -419,7 +366,7 @@ Object.defineProperty(Glyph.prototype, "yMin", {
         if (yMin < -32768) {
             throw new Error(
                 "yMin value for glyph " +
-                    (this.name ? '"' + this.name + '"' : JSON.stringify(this.codes)) +
+                    (this.name ? `"${this.name}"` : JSON.stringify(this.codes)) +
                     " is out of bounds (actual " +
                     yMin +
                     ', expected -32768..32767, d="' +
@@ -436,8 +383,8 @@ Object.defineProperty(Glyph.prototype, "yMax", {
         var yMax = 0;
         var hasPoints = false;
 
-        _.forEach(this.contours, function (contour) {
-            _.forEach(contour.points, function (point) {
+        _.forEach(this.contours, (contour) => {
+            _.forEach(contour.points, (point) => {
                 yMax = Math.max(yMax, -Math.floor(-point.y));
                 hasPoints = true;
             });
@@ -446,7 +393,7 @@ Object.defineProperty(Glyph.prototype, "yMax", {
         if (yMax > 32767) {
             throw new Error(
                 "yMax value for glyph " +
-                    (this.name ? '"' + this.name + '"' : JSON.stringify(this.codes)) +
+                    (this.name ? `"${this.name}"` : JSON.stringify(this.codes)) +
                     " is out of bounds (actual " +
                     yMax +
                     ', expected -32768..32767, d="' +

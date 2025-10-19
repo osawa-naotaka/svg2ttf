@@ -3,7 +3,7 @@ import * as math from "../math.js";
 
 // Remove points, that looks like straight line
 function simplify(contours, accuracy) {
-    return _.map(contours, function (contour) {
+    return _.map(contours, (contour) => {
         var i, curr, prev, next;
         var p, pPrev, pNext;
 
@@ -31,10 +31,10 @@ function simplify(contours, accuracy) {
 // Remove interpolateable oncurve points
 // Those should be in the middle of nebor offcurve points
 function interpolate(contours, accuracy) {
-    return _.map(contours, function (contour) {
+    return _.map(contours, (contour) => {
         var resContour = [];
 
-        _.forEach(contour, function (point, idx) {
+        _.forEach(contour, (point, idx) => {
             // Never skip first and last points
             if (idx === 0 || idx === contour.length - 1) {
                 resContour.push(point);
@@ -63,17 +63,15 @@ function interpolate(contours, accuracy) {
 }
 
 function roundPoints(contours) {
-    return _.map(contours, function (contour) {
-        return _.map(contour, function (point) {
-            return { x: Math.round(point.x), y: Math.round(point.y), onCurve: point.onCurve };
-        });
-    });
+    return _.map(contours, (contour) =>
+        _.map(contour, (point) => ({ x: Math.round(point.x), y: Math.round(point.y), onCurve: point.onCurve })),
+    );
 }
 
 // Remove closing point if it is the same as first point of contour.
 // TTF doesn't need this point when drawing contours.
 function removeClosingReturnPoints(contours) {
-    return _.map(contours, function (contour) {
+    return _.map(contours, (contour) => {
         var length = contour.length;
 
         if (length > 1 && contour[0].x === contour[length - 1].x && contour[0].y === contour[length - 1].y) {
@@ -88,10 +86,10 @@ function toRelative(contours) {
     var resContours = [];
     var resContour;
 
-    _.forEach(contours, function (contour) {
+    _.forEach(contours, (contour) => {
         resContour = [];
         resContours.push(resContour);
-        _.forEach(contour, function (point) {
+        _.forEach(contour, (point) => {
             resContour.push({
                 x: point.x - prevPoint.x,
                 y: point.y - prevPoint.y,

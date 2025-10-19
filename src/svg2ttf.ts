@@ -9,8 +9,8 @@
 
 import fs from "node:fs";
 import { ArgumentParser } from "argparse";
-import svg2ttf from "./index.js";
 import packageJson from "../package.json" with { type: "json" };
+import svg2ttf from "./index.js";
 
 const parser = new ArgumentParser({
     add_help: true,
@@ -73,7 +73,7 @@ const options: {
 
 try {
     svg = fs.readFileSync(args.infile[0], "utf-8");
-} catch (e) {
+} catch (_e) {
     console.error("Can't open input file (%s)", args.infile[0]);
     process.exit(1);
 }

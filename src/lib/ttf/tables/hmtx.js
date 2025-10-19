@@ -6,7 +6,7 @@ import ByteBuffer from "microbuffer";
 function createHtmxTable(font) {
     var buf = new ByteBuffer(font.glyphs.length * 4);
 
-    _.forEach(font.glyphs, function (glyph) {
+    _.forEach(font.glyphs, (glyph) => {
         buf.writeUint16(glyph.width); //advanceWidth
         buf.writeInt16(glyph.xMin); //lsb
     });
