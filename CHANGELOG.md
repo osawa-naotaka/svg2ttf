@@ -1,7 +1,9 @@
+6.0.5 / 2025-10-20
+------------------
 
+- Fixed a regression bug that was generating incorrect TTF files
+- Added TypeScript type definitions to the API
 
-- 正しくないTTFを生成していたエンバグ問題を解決
-- APIに型を付けた
 
 6.0.4 / 2025-10-19
 ------------------
