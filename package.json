@@ -1,17 +1,23 @@
 {
-  "name": "svg2ttf",
-  "version": "6.0.3",
+  "name": "@lulliecat/svg2ttf",
+  "version": "6.0.4",
   "type": "module",
   "description": "Converts SVG font to TTF font",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "font",
     "ttf",
     "svg",
     "convertor"
   ],
-  "author": "Sergey Batishchev <sergej.batishchev@gmail.com>",
+  "author": "osawa naotaka",
   "license": "MIT",
-  "repository": "fontello/svg2ttf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osawa-naotaka/svg2ttf.git"
+  },
   "bin": {
     "svg2ttf": "./build/svg2ttf.js"
   },
