@@ -19,3 +19,4 @@ flake.lock
 tsconfig.json
 tsup.config.ts
 yarn.lock
+*.tgz
