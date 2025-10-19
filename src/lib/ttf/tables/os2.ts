@@ -1,8 +1,8 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/os2.htm
 
 import MicroBuffer from "../../microbuffer";
-import { identifier } from "../utils.js";
 import type { Font } from "../../sfnt.js";
+import { identifier } from "../utils.js";
 
 //get first glyph unicode
 function getFirstCharIndex(font: Font): number {
@@ -11,10 +11,7 @@ function getFirstCharIndex(font: Font): number {
         const num = Number.parseInt(point, 10);
         return num < Number.parseInt(min, 10) ? point : min;
     }, keys[0] ?? "0");
-    return Math.max(
-        0,
-        Math.min(0xffff, Math.abs(Number.parseInt(minKey, 10))),
-    );
+    return Math.max(0, Math.min(0xffff, Math.abs(Number.parseInt(minKey, 10))));
 }
 
 //get last glyph unicode
@@ -24,10 +21,7 @@ function getLastCharIndex(font: Font): number {
         const num = Number.parseInt(point, 10);
         return num > Number.parseInt(max, 10) ? point : max;
     }, keys[0] ?? "0");
-    return Math.max(
-        0,
-        Math.min(0xffff, Math.abs(Number.parseInt(maxKey, 10))),
-    );
+    return Math.max(0, Math.min(0xffff, Math.abs(Number.parseInt(maxKey, 10))));
 }
 
 // OpenType spec: https://docs.microsoft.com/en-us/typography/opentype/spec/os2

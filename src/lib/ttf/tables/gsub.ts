@@ -1,8 +1,8 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/GSUB.htm
 
 import MicroBuffer from "../../microbuffer";
-import { identifier } from "../utils.js";
 import type { Font, Glyph } from "../../sfnt.js";
+import { identifier } from "../utils.js";
 
 interface BufferWithOffset extends MicroBuffer {
     _listOffset?: number;
@@ -67,8 +67,7 @@ function createScriptList(): MicroBuffer {
         2 + // Script count
         scripts.length * scriptSize;
 
-    const tableLengths = scripts.map((script) => script[1].length)
-        .reduce((result, count) => result + count, 0);
+    const tableLengths = scripts.map((script) => script[1].length).reduce((result, count) => result + count, 0);
 
     const length = 0 + header + tableLengths;
 
@@ -202,7 +201,7 @@ function createLigatureSet(font: Font, _codePoint: number, ligatures: any[]): Mi
         ligatureTables.push(createLigatureTable(font, ligature));
     }
 
-    const tableLengths = ligatureTables.map(t => t.length).reduce((result, count) => result + count, 0);
+    const tableLengths = ligatureTables.map((t) => t.length).reduce((result, count) => result + count, 0);
 
     let offset =
         0 +
@@ -240,7 +239,7 @@ function createLigatureList(font: Font, ligatureGroups: LigatureGroup[]): MicroB
         sets.push(set);
     }
 
-    const setLengths = sets.map(s => s.length).reduce((result, count) => result + count, 0);
+    const setLengths = sets.map((s) => s.length).reduce((result, count) => result + count, 0);
 
     const coverage = createLigatureCoverage(font, ligatureGroups);
 

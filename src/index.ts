@@ -5,8 +5,8 @@
  * Written for fontello.com project.
  */
 
-import type MicroBuffer from "./lib/microbuffer";
 import SvgPath from "svgpath";
+import type MicroBuffer from "./lib/microbuffer";
 import * as sfnt from "./lib/sfnt.js";
 import * as svg from "./lib/svg.js";
 import ucs2 from "./lib/ucs2.js";

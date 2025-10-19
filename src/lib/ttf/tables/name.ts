@@ -1,8 +1,8 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/name.htm
 
 import MicroBuffer from "../../microbuffer";
-import Str from "../../str.js";
 import type { Font } from "../../sfnt.js";
+import Str from "../../str.js";
 
 const TTF_NAMES = {
     COPYRIGHT: 0,

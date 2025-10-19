@@ -205,7 +205,7 @@ export class Font {
         if (this.glyphs.length === 0) {
             return 0;
         }
-        const widths = this.glyphs.map(g => g.width);
+        const widths = this.glyphs.map((g) => g.width);
 
         return Number.parseInt((widths.reduce((prev, cur) => prev + cur) / widths.length).toString(), 10);
     }
@@ -317,7 +317,7 @@ export class Font {
     }
 
     get minLsb(): number {
-        return Number.parseInt((Math.min(...this.glyphs.map(g => g.xMin)) || 0).toString(), 10);
+        return Number.parseInt((Math.min(...this.glyphs.map((g) => g.xMin)) || 0).toString(), 10);
     }
 
     get minRsb(): number {

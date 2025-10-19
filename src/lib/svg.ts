@@ -1,8 +1,8 @@
 import { DOMParser } from "@xmldom/xmldom";
 import cubic2quad from "cubic2quad";
 import svgpath from "svgpath";
+import type { Glyph } from "./sfnt.js";
 import ucs2 from "./ucs2.js";
-import { Glyph } from "./sfnt.js";
 
 interface SvgGlyph {
     d: string;
@@ -109,7 +109,7 @@ function deduplicateGlyps(glyphs: SvgGlyph[], ligatures: SvgLigature[]): SvgGlyp
 
     for (const glyph of glyphs) {
         // Search for glyphs with the same properties (width and d)
-        const canonical = result.find(g => g.width === glyph.width && g.d === glyph.d);
+        const canonical = result.find((g) => g.width === glyph.width && g.d === glyph.d);
 
         if (canonical) {
             // Add the code points to the unicode array.

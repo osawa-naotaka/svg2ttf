@@ -139,7 +139,9 @@ function createFormat4Table(font: Font): MicroBuffer {
     }
 
     const segCount = segments.length + 1; // + 1 for the 0xFFFF section
-    const glyphIndexArrayLength = glyphIndexArrays.map(arr => arr.length).reduce((result, count) => result + count, 0);
+    const glyphIndexArrayLength = glyphIndexArrays
+        .map((arr) => arr.length)
+        .reduce((result, count) => result + count, 0);
 
     const length =
         0 +
