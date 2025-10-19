@@ -1,66 +1,55 @@
-svg2ttf
-=======
+# svg2ttf
 
-[![CI](https://github.com/fontello/svg2ttf/actions/workflows/ci.yml/badge.svg)](https://github.com/fontello/svg2ttf/actions/workflows/ci.yml)
-[![NPM version](https://img.shields.io/npm/v/svg2ttf.svg?style=flat)](https://www.npmjs.org/package/svg2ttf)
+Converts SVG fonts to TTF format. Originally written for [Fontello](http://fontello.com), this tool can be useful for various font conversion projects.
 
-> Converts SVG fonts to TTF format. It was initially written for
-[Fontello](http://fontello.com), but you can find it useful for your projects.
+@lulliecat/svg2ttf is a security-updated fork of the original svg2ttf. The development environment has been modernized, and TypeScript type definitions will be provided in future releases.
 
-__For developpers:__
+## For Developers
 
-Internal API is similar to FontForge's one. Since primary goal
-is generating iconic fonts, sources can lack some specific TTF/OTF features,
-like kerning and so on. Anyway, current code is a good base for development,
-because it will save you tons of hours to implement correct writing & optimizing
-TTF tables.
+The internal API is similar to FontForge's API. Since the primary goal is generating icon fonts, some specific TTF/OTF features (such as kerning) may not be fully supported. However, the current codebase provides a solid foundation for development, saving you significant time in implementing correct TTF table writing and optimization.
 
 
-Using from CLI
-----------------
+## Installation
 
-Install:
+Install globally via npm:
 
-``` bash
-npm install -g svg2ttf
+```bash
+npm install -g @lulliecat/svg2ttf
 ```
 
-Usage example:
+## CLI Usage
 
-``` bash
+Convert an SVG font to TTF format:
+
+```bash
 svg2ttf fontello.svg fontello.ttf
 ```
 
-
-API
----
+## API
 
 ### svg2ttf(svgFontString, options) -> buf
 
-- `svgFontString` - SVG font content
-- `options`
-  - `copyright` - copyright string (optional)
-  - `description` - description string (optional)
-  - `ts` - Unix timestamp (in seconds) to override creation time (optional)
-  - `url` - manufacturer url (optional)
-  - `version` - font version string, can be `Version x.y` or `x.y`.
-- `buf` - internal [byte buffer](https://github.com/fontello/microbuffer)
-   object, similar to DataView. It's `buffer` property is  `Uin8Array` or `Array`
-   with ttf content.
+**Parameters:**
 
-Example:
+- `svgFontString` (string) - SVG font content as a string
+- `options` (object) - Configuration options
+  - `copyright` (string, optional) - Copyright text
+  - `description` (string, optional) - Font description
+  - `ts` (number, optional) - Unix timestamp in seconds to override creation time
+  - `url` (string, optional) - Manufacturer URL
+  - `version` (string, optional) - Font version string (e.g., `Version x.y` or `x.y`)
 
-``` javascript
-var fs = require('fs');
-var svg2ttf = require('svg2ttf');
+**Returns:**
 
-var ttf = svg2ttf(fs.readFileSync('myfont.svg', 'utf8'), {});
-fs.writeFileSync('myfont.ttf', new Buffer(ttf.buffer));
+- `buf` - Internal [byte buffer](https://github.com/fontello/microbuffer) object, similar to DataView. The `buffer` property contains a `Uint8Array` or `Array` with the TTF content.
+
+**Example:**
+
+```javascript
+const fs = require('fs');
+const svg2ttf = require('@lulliecat/svg2ttf');
+
+const ttf = svg2ttf(fs.readFileSync('myfont.svg', 'utf8'), {});
+fs.writeFileSync('myfont.ttf', Buffer.from(ttf.buffer));
 ```
 
-
-## svg2ttf for enterprise
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of `svg2ttf` and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-svg2ttf?utm_source=npm-svg2ttf&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
