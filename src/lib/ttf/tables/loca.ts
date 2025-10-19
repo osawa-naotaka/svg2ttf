@@ -1,23 +1,23 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/loca.htm
 
-import _ from "lodash";
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font } from "../../sfnt.js";
 
-function tableSize(font, isShortFormat) {
-    var result = (font.glyphs.length + 1) * (isShortFormat ? 2 : 4); // by glyph count + tail
+function tableSize(font: Font, isShortFormat: boolean): number {
+    const result = (font.glyphs.length + 1) * (isShortFormat ? 2 : 4); // by glyph count + tail
 
     return result;
 }
 
-function createLocaTable(font) {
-    var isShortFormat = font.ttf_glyph_size < 0x20000;
+function createLocaTable(font: Font): MicroBuffer {
+    const isShortFormat = font.ttf_glyph_size < 0x20000;
 
-    var buf = new ByteBuffer(tableSize(font, isShortFormat));
+    const buf = new MicroBuffer(tableSize(font, isShortFormat));
 
-    var location = 0;
+    let location = 0;
 
     // Array of offsets in GLYF table for each glyph
-    _.forEach(font.glyphs, (glyph) => {
+    for (const glyph of font.glyphs) {
         if (isShortFormat) {
             buf.writeUint16(location);
             location += glyph.ttf_size / 2; // actual location must be divided to 2 in short format
@@ -25,7 +25,7 @@ function createLocaTable(font) {
             buf.writeUint32(location);
             location += glyph.ttf_size; //actual location is stored as is in long format
         }
-    });
+    }
 
     // The last glyph location is stored to get last glyph length
     if (isShortFormat) {

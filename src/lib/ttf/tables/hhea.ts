@@ -1,9 +1,10 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/hhea.htm
 
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font } from "../../sfnt.js";
 
-function createHHeadTable(font) {
-    var buf = new ByteBuffer(36); // fixed table length
+function createHHeadTable(font: Font): MicroBuffer {
+    const buf = new MicroBuffer(36); // fixed table length
 
     buf.writeInt32(0x10000); // version
     buf.writeInt16(font.ascent); // ascent

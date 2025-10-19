@@ -1,71 +1,88 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/cmap.htm
 
-import _ from "lodash";
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font, Glyph } from "../../sfnt.js";
 
-function getIDByUnicode(font, unicode) {
+function getIDByUnicode(font: Font, unicode: number): number {
     return font.codePoints[unicode] ? font.codePoints[unicode].id : 0;
 }
 
+interface Segment {
+    start: number;
+    end: number;
+    length: number;
+}
+
 // Calculate character segments with non-interruptable chains of unicodes
-function getSegments(font, bounds) {
+function getSegments(font: Font, bounds?: number): Segment[] {
     bounds = bounds || Number.MAX_VALUE;
 
-    var result = [];
-    var segment;
+    const result: Segment[] = [];
+    let segment: Segment | undefined;
 
     // prevEndCode only changes when a segment closes
-    _.forEach(font.codePoints, (_glyph, unicode) => {
-        unicode = parseInt(unicode, 10);
-        if (unicode >= bounds) {
-            return false;
+    for (const [unicode, _glyph] of Object.entries(font.codePoints)) {
+        const unicodeNum = Number.parseInt(unicode, 10);
+        if (unicodeNum >= bounds) {
+            break;
         }
         // Initialize first segment or add new segment if code "hole" is found
-        if (!segment || unicode !== segment.end + 1) {
+        if (!segment || unicodeNum !== segment.end + 1) {
             if (segment) {
                 result.push(segment);
             }
             segment = {
-                start: unicode,
+                start: unicodeNum,
+                end: unicodeNum,
+                length: 0,
             };
         }
-        segment.end = unicode;
-    });
+        segment.end = unicodeNum;
+    }
 
     // Need to finish the last segment
     if (segment) {
         result.push(segment);
     }
 
-    _.forEach(result, (segment) => {
+    for (const segment of result) {
         segment.length = segment.end - segment.start + 1;
-    });
+    }
 
     return result;
+}
+
+interface CodePoint {
+    unicode: number;
+    glyph: Glyph;
 }
 
 // Returns an array of {unicode, glyph} sets for all valid code points up to bounds
-function getCodePoints(codePoints, bounds) {
+function getCodePoints(codePoints: any, bounds?: number): CodePoint[] {
     bounds = bounds || Number.MAX_VALUE;
 
-    var result = [];
+    const result: CodePoint[] = [];
 
-    _.forEach(codePoints, (glyph, unicode) => {
-        unicode = parseInt(unicode, 10);
+    for (const [unicode, glyph] of Object.entries(codePoints)) {
+        const unicodeNum = Number.parseInt(unicode, 10);
         // Since this is a sparse array, iterating will only yield the valid code points
-        if (unicode > bounds) {
-            return false;
+        if (unicodeNum > bounds) {
+            break;
         }
         result.push({
-            unicode: unicode,
-            glyph: glyph,
+            unicode: unicodeNum,
+            glyph: glyph as any,
         });
-    });
+    }
     return result;
 }
 
-function bufferForTable(format, length) {
-    var fieldWidth = format === 8 || format === 10 || format === 12 || format === 13 ? 4 : 2;
+interface BufferWithOffset extends MicroBuffer {
+    _tableOffset?: number;
+}
+
+function bufferForTable(format: number, length: number): MicroBuffer {
+    const fieldWidth = format === 8 || format === 10 || format === 12 || format === 13 ? 4 : 2;
 
     length +=
         0 +
@@ -73,10 +90,10 @@ function bufferForTable(format, length) {
         fieldWidth + // Length
         fieldWidth; // Language
 
-    var LANGUAGE = 0;
-    var buffer = new ByteBuffer(length);
+    const LANGUAGE = 0;
+    const buffer = new MicroBuffer(length);
 
-    var writer = fieldWidth === 4 ? buffer.writeUint32 : buffer.writeUint16;
+    const writer = fieldWidth === 4 ? buffer.writeUint32 : buffer.writeUint16;
 
     // Format specifier
     buffer.writeUint16(format);
@@ -93,42 +110,38 @@ function bufferForTable(format, length) {
     return buffer;
 }
 
-function createFormat0Table(font) {
-    var FORMAT = 0;
+function createFormat0Table(font: Font): MicroBuffer {
+    const FORMAT = 0;
 
-    var i;
+    const length = 0xff + 1; //Format 0 maps only single-byte code points
 
-    var length = 0xff + 1; //Format 0 maps only single-byte code points
+    const buffer = bufferForTable(FORMAT, length);
 
-    var buffer = bufferForTable(FORMAT, length);
-
-    for (i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
         buffer.writeUint8(getIDByUnicode(font, i)); // existing char in table 0..255
     }
     return buffer;
 }
 
-function createFormat4Table(font) {
-    var FORMAT = 4;
+function createFormat4Table(font: Font): MicroBuffer {
+    const FORMAT = 4;
 
-    var i;
+    const segments = getSegments(font, 0xffff);
+    const glyphIndexArrays: number[][] = [];
 
-    var segments = getSegments(font, 0xffff);
-    var glyphIndexArrays = [];
+    for (const segment of segments) {
+        const glyphIndexArray: number[] = [];
 
-    _.forEach(segments, (segment) => {
-        var glyphIndexArray = [];
-
-        for (var unicode = segment.start; unicode <= segment.end; unicode++) {
+        for (let unicode = segment.start; unicode <= segment.end; unicode++) {
             glyphIndexArray.push(getIDByUnicode(font, unicode));
         }
         glyphIndexArrays.push(glyphIndexArray);
-    });
+    }
 
-    var segCount = segments.length + 1; // + 1 for the 0xFFFF section
-    var glyphIndexArrayLength = _.reduce(_.map(glyphIndexArrays, "length"), (result, count) => result + count, 0);
+    const segCount = segments.length + 1; // + 1 for the 0xFFFF section
+    const glyphIndexArrayLength = glyphIndexArrays.map(arr => arr.length).reduce((result, count) => result + count, 0);
 
-    var length =
+    const length =
         0 +
         2 + // segCountX2
         2 + // searchRange
@@ -141,91 +154,97 @@ function createFormat4Table(font) {
         2 * segCount + //idRangeOffsets
         2 * glyphIndexArrayLength;
 
-    var buffer = bufferForTable(FORMAT, length);
+    const buffer = bufferForTable(FORMAT, length);
 
     buffer.writeUint16(segCount * 2); // segCountX2
-    var maxExponent = Math.floor(Math.log(segCount) / Math.LN2);
-    var searchRange = 2 * 2 ** maxExponent;
+    const maxExponent = Math.floor(Math.log(segCount) / Math.LN2);
+    const searchRange = 2 * 2 ** maxExponent;
 
     buffer.writeUint16(searchRange); // searchRange
     buffer.writeUint16(maxExponent); // entrySelector
     buffer.writeUint16(2 * segCount - searchRange); // rangeShift
 
     // Array of end counts
-    _.forEach(segments, (segment) => {
+    for (const segment of segments) {
         buffer.writeUint16(segment.end);
-    });
+    }
     buffer.writeUint16(0xffff); // endCountArray should be finished with 0xFFFF
 
     buffer.writeUint16(0); // reservedPad
 
     // Array of start counts
-    _.forEach(segments, (segment) => {
+    for (const segment of segments) {
         buffer.writeUint16(segment.start); //startCountArray
-    });
+    }
     buffer.writeUint16(0xffff); // startCountArray should be finished with 0xFFFF
 
     // Array of deltas. Leave it zero to not complicate things when using the glyph index array
-    for (i = 0; i < segments.length; i++) {
+    for (let i = 0; i < segments.length; i++) {
         buffer.writeUint16(0); // delta is always zero because we use the glyph array
     }
     buffer.writeUint16(1); // idDeltaArray should be finished with 1
 
     // Array of range offsets
-    var offset = 0;
+    let offset = 0;
 
-    for (i = 0; i < segments.length; i++) {
+    for (let i = 0; i < segments.length; i++) {
         buffer.writeUint16(2 * (segments.length - i + 1 + offset));
         offset += glyphIndexArrays[i].length;
     }
     buffer.writeUint16(0); // rangeOffsetArray should be finished with 0
 
-    _.forEach(glyphIndexArrays, (glyphIndexArray) => {
-        _.forEach(glyphIndexArray, (glyphId) => {
+    for (const glyphIndexArray of glyphIndexArrays) {
+        for (const glyphId of glyphIndexArray) {
             buffer.writeUint16(glyphId);
-        });
-    });
+        }
+    }
 
     return buffer;
 }
 
-function createFormat12Table(font) {
-    var FORMAT = 12;
+function createFormat12Table(font: Font): MicroBuffer {
+    const FORMAT = 12;
 
-    var codePoints = getCodePoints(font.codePoints);
+    const codePoints = getCodePoints(font.codePoints);
 
-    var length =
+    const length =
         0 +
         4 + // nGroups
         4 * codePoints.length + // startCharCode
         4 * codePoints.length + // endCharCode
         4 * codePoints.length; // startGlyphCode
 
-    var buffer = bufferForTable(FORMAT, length);
+    const buffer = bufferForTable(FORMAT, length);
 
     buffer.writeUint32(codePoints.length); // nGroups
-    _.forEach(codePoints, (codePoint) => {
+    for (const codePoint of codePoints) {
         buffer.writeUint32(codePoint.unicode); // startCharCode
         buffer.writeUint32(codePoint.unicode); // endCharCode
         buffer.writeUint32(codePoint.glyph.id); // startGlyphCode
-    });
+    }
 
     return buffer;
 }
 
-function createCMapTable(font) {
-    var TABLE_HEAD =
+interface TableHeader {
+    platformID: number;
+    encodingID: number;
+    table: BufferWithOffset;
+}
+
+function createCMapTable(font: Font): MicroBuffer {
+    const TABLE_HEAD =
         0 +
         2 + // platform
         2 + // encoding
         4; // offset
 
-    var singleByteTable = createFormat0Table(font);
-    var twoByteTable = createFormat4Table(font);
-    var fourByteTable = createFormat12Table(font);
+    const singleByteTable = createFormat0Table(font) as BufferWithOffset;
+    const twoByteTable = createFormat4Table(font) as BufferWithOffset;
+    const fourByteTable = createFormat12Table(font) as BufferWithOffset;
 
     // Subtable headers must be sorted by platformID, encodingID
-    var tableHeaders = [
+    const tableHeaders: TableHeader[] = [
         // subtable 4, unicode
         {
             platformID: 0,
@@ -258,39 +277,39 @@ function createCMapTable(font) {
         },
     ];
 
-    var tables = [twoByteTable, singleByteTable, fourByteTable];
+    const tables = [twoByteTable, singleByteTable, fourByteTable];
 
-    var tableOffset =
+    let tableOffset =
         0 +
         2 + // version
         2 + // number of subtable headers
         tableHeaders.length * TABLE_HEAD;
 
     // Calculate offsets for each table
-    _.forEach(tables, (table) => {
+    for (const table of tables) {
         table._tableOffset = tableOffset;
         tableOffset += table.length;
-    });
+    }
 
-    var length = tableOffset;
+    const length = tableOffset;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // Write table header.
     buffer.writeUint16(0); // version
     buffer.writeUint16(tableHeaders.length); // count
 
     // Write subtable headers
-    _.forEach(tableHeaders, (header) => {
+    for (const header of tableHeaders) {
         buffer.writeUint16(header.platformID); // platform
         buffer.writeUint16(header.encodingID); // encoding
-        buffer.writeUint32(header.table._tableOffset); // offset
-    });
+        buffer.writeUint32(header.table._tableOffset as number); // offset
+    }
 
     // Write subtables
-    _.forEach(tables, (table) => {
+    for (const table of tables) {
         buffer.writeBytes(table.buffer);
-    });
+    }
 
     return buffer;
 }

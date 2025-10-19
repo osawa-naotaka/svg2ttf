@@ -1,33 +1,43 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/os2.htm
 
-import _ from "lodash";
-
-var identifier = require("../utils.js").identifier;
-
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import { identifier } from "../utils.js";
+import type { Font } from "../../sfnt.js";
 
 //get first glyph unicode
-function getFirstCharIndex(font) {
+function getFirstCharIndex(font: Font): number {
+    const keys = Object.keys(font.codePoints);
+    const minKey = keys.reduce((min, point) => {
+        const num = Number.parseInt(point, 10);
+        return num < Number.parseInt(min, 10) ? point : min;
+    }, keys[0] ?? "0");
     return Math.max(
         0,
-        Math.min(0xffff, Math.abs(_.minBy(Object.keys(font.codePoints), (point) => parseInt(point, 10)))),
+        Math.min(0xffff, Math.abs(Number.parseInt(minKey, 10))),
     );
 }
 
 //get last glyph unicode
-function getLastCharIndex(font) {
+function getLastCharIndex(font: Font): number {
+    const keys = Object.keys(font.codePoints);
+    const maxKey = keys.reduce((max, point) => {
+        const num = Number.parseInt(point, 10);
+        return num > Number.parseInt(max, 10) ? point : max;
+    }, keys[0] ?? "0");
     return Math.max(
         0,
-        Math.min(0xffff, Math.abs(_.maxBy(Object.keys(font.codePoints), (point) => parseInt(point, 10)))),
+        Math.min(0xffff, Math.abs(Number.parseInt(maxKey, 10))),
     );
 }
 
 // OpenType spec: https://docs.microsoft.com/en-us/typography/opentype/spec/os2
-function createOS2Table(font) {
+function createOS2Table(font: Font): MicroBuffer {
     // use at least 2 for ligatures and kerning
-    var maxContext = font.ligatures.map((l) => l.unicode.length).reduce((a, b) => Math.max(a, b), 2);
+    const maxContext = font.ligatures
+        .map((l: any) => l.unicode.length)
+        .reduce((a: number, b: number) => Math.max(a, b), 2);
 
-    var buf = new ByteBuffer(96);
+    const buf = new MicroBuffer(96);
 
     // Version 5 is not supported in the Android 5 browser.
     buf.writeUint16(4); // version

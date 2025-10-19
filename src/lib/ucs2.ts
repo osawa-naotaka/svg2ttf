@@ -1,26 +1,26 @@
-import _ from "lodash";
-
 // Taken from the punycode library
-function ucs2encode(array) {
-    return _.map(array, (value) => {
-        var output = "";
+function ucs2encode(array: number[]): string {
+    return array
+        .map((value) => {
+            let output = "";
 
-        if (value > 0xffff) {
-            value -= 0x10000;
-            output += String.fromCharCode(((value >>> 10) & 0x3ff) | 0xd800);
-            value = 0xdc00 | (value & 0x3ff);
-        }
-        output += String.fromCharCode(value);
-        return output;
-    }).join("");
+            if (value > 0xffff) {
+                value -= 0x10000;
+                output += String.fromCharCode(((value >>> 10) & 0x3ff) | 0xd800);
+                value = 0xdc00 | (value & 0x3ff);
+            }
+            output += String.fromCharCode(value);
+            return output;
+        })
+        .join("");
 }
 
-function ucs2decode(string) {
-    var output = [],
-        counter = 0,
-        length = string.length,
-        value,
-        extra;
+function ucs2decode(string: string): number[] {
+    const output: number[] = [];
+    let counter = 0;
+    const length = string.length;
+    let value: number;
+    let extra: number;
 
     while (counter < length) {
         value = string.charCodeAt(counter++);

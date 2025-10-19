@@ -1,19 +1,19 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/maxp.htm
 
-import _ from "lodash";
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font } from "../../sfnt.js";
 
 // Find max points in glyph TTF contours.
-function getMaxPoints(font) {
-    return _.max(_.map(font.glyphs, (glyph) => _.reduce(glyph.ttfContours, (sum, ctr) => sum + ctr.length, 0)));
+function getMaxPoints(font: Font): number {
+    return Math.max(...font.glyphs.map((glyph) => glyph.ttfContours.reduce((sum, ctr) => sum + ctr.length, 0)), 0);
 }
 
-function getMaxContours(font) {
-    return _.max(_.map(font.glyphs, (glyph) => glyph.ttfContours.length));
+function getMaxContours(font: Font): number {
+    return Math.max(...font.glyphs.map((glyph) => glyph.ttfContours.length), 0);
 }
 
-function createMaxpTable(font) {
-    var buf = new ByteBuffer(32);
+function createMaxpTable(font: Font): MicroBuffer {
+    const buf = new MicroBuffer(32);
 
     buf.writeInt32(0x10000); // version
     buf.writeUint16(font.glyphs.length); // numGlyphs

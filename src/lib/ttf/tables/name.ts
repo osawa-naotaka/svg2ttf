@@ -1,10 +1,10 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/name.htm
 
-import _ from "lodash";
-import ByteBuffer from "microbuffer";
-import Str from "../../str";
+import MicroBuffer from "../../microbuffer";
+import Str from "../../str.js";
+import type { Font } from "../../sfnt.js";
 
-var TTF_NAMES = {
+const TTF_NAMES = {
     COPYRIGHT: 0,
     FONT_FAMILY: 1,
     ID: 3,
@@ -12,18 +12,26 @@ var TTF_NAMES = {
     URL_VENDOR: 11,
 };
 
-function tableSize(names) {
-    var result = 6; // table header
+interface NameRecord {
+    data: number[];
+    id: number;
+    platformID: number;
+    encodingID: number;
+    languageID: number;
+}
 
-    _.forEach(names, (name) => {
+function tableSize(names: NameRecord[]): number {
+    let result = 6; // table header
+
+    for (const name of names) {
         result += 12 + name.data.length; //name header and data
-    });
+    }
     return result;
 }
 
-function getStrings(name, id) {
-    var result = [];
-    var str = new Str(name);
+function getStrings(name: string, id: number): NameRecord[] {
+    const result: NameRecord[] = [];
+    const str = new Str(name);
 
     result.push({ data: str.toUTF8Bytes(), id: id, platformID: 1, encodingID: 0, languageID: 0 }); //mac standard
     result.push({ data: str.toUCS2Bytes(), id: id, platformID: 3, encodingID: 1, languageID: 0x409 }); //windows standard
@@ -31,8 +39,8 @@ function getStrings(name, id) {
 }
 
 // Collect font names
-function getNames(font) {
-    var result = [];
+function getNames(font: Font): NameRecord[] {
+    const result: NameRecord[] = [];
 
     if (font.copyright) {
         result.push.apply(result, getStrings(font.copyright, TTF_NAMES.COPYRIGHT));
@@ -46,15 +54,14 @@ function getNames(font) {
     result.push.apply(result, getStrings(font.description, TTF_NAMES.DESCRIPTION));
     result.push.apply(result, getStrings(font.url, TTF_NAMES.URL_VENDOR));
 
-    _.forEach(font.sfntNames, (sfntName) => {
+    for (const sfntName of font.sfntNames) {
         result.push.apply(result, getStrings(sfntName.value, sfntName.id));
-    });
+    }
 
     result.sort((a, b) => {
-        var orderFields = ["platformID", "encodingID", "languageID", "id"];
-        var i;
+        const orderFields: (keyof NameRecord)[] = ["platformID", "encodingID", "languageID", "id"];
 
-        for (i = 0; i < orderFields.length; i++) {
+        for (let i = 0; i < orderFields.length; i++) {
             if (a[orderFields[i]] !== b[orderFields[i]]) {
                 return a[orderFields[i]] < b[orderFields[i]] ? -1 : 1;
             }
@@ -65,19 +72,19 @@ function getNames(font) {
     return result;
 }
 
-function createNameTable(font) {
-    var names = getNames(font);
+function createNameTable(font: Font): MicroBuffer {
+    const names = getNames(font);
 
-    var buf = new ByteBuffer(tableSize(names));
+    const buf = new MicroBuffer(tableSize(names));
 
     buf.writeUint16(0); // formatSelector
     buf.writeUint16(names.length); // nameRecordsCount
-    var offsetPosition = buf.tell();
+    const offsetPosition = buf.tell();
 
     buf.writeUint16(0); // offset, will be filled later
-    var nameOffset = 0;
+    let nameOffset = 0;
 
-    _.forEach(names, (name) => {
+    for (const name of names) {
         buf.writeUint16(name.platformID); // platformID
         buf.writeUint16(name.encodingID); // platEncID
         buf.writeUint16(name.languageID); // languageID, English (USA)
@@ -85,13 +92,13 @@ function createNameTable(font) {
         buf.writeUint16(name.data.length); // reclength
         buf.writeUint16(nameOffset); // offset
         nameOffset += name.data.length;
-    });
-    var actualStringDataOffset = buf.tell();
+    }
+    const actualStringDataOffset = buf.tell();
 
     //Array of bytes with actual string data
-    _.forEach(names, (name) => {
+    for (const name of names) {
         buf.writeBytes(name.data);
-    });
+    }
 
     //write actual string data offset
     buf.seek(offsetPosition);

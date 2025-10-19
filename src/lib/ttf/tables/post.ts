@@ -1,41 +1,41 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/post.htm
 
-import _ from "lodash";
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font } from "../../sfnt.js";
 
-function tableSize(font, names) {
-    var result = 36; // table header
+function tableSize(font: Font, names: number[][]): number {
+    let result = 36; // table header
 
     result += font.glyphs.length * 2; // name declarations
-    _.forEach(names, (name) => {
+    for (const name of names) {
         result += name.length;
-    });
+    }
     return result;
 }
 
-function pascalString(str) {
-    var bytes = [];
-    var len = str ? (str.length < 256 ? str.length : 255) : 0; //length in Pascal string is limited with 255
+function pascalString(str: string): number[] {
+    const bytes: number[] = [];
+    const len = str ? (str.length < 256 ? str.length : 255) : 0; //length in Pascal string is limited with 255
 
     bytes.push(len);
-    for (var i = 0; i < len; i++) {
-        var char = str.charCodeAt(i);
+    for (let i = 0; i < len; i++) {
+        const char = str.charCodeAt(i);
 
         bytes.push(char < 128 ? char : 95); //non-ASCII characters are substituted with '_'
     }
     return bytes;
 }
 
-function createPostTable(font) {
-    var names = [];
+function createPostTable(font: Font): MicroBuffer {
+    const names: number[][] = [];
 
-    _.forEach(font.glyphs, (glyph) => {
+    for (const glyph of font.glyphs) {
         if (glyph.unicode !== 0) {
             names.push(pascalString(glyph.name));
         }
-    });
+    }
 
-    var buf = new ByteBuffer(tableSize(font, names));
+    const buf = new MicroBuffer(tableSize(font, names));
 
     buf.writeInt32(0x20000); // formatType,  version 2.0
     buf.writeInt32(font.italicAngle); // italicAngle
@@ -49,20 +49,20 @@ function createPostTable(font) {
     buf.writeUint16(font.glyphs.length); // numberOfGlyphs
 
     // Array of glyph name indexes
-    var index = 258; // first index of custom glyph name, it is calculated as glyph name index + 258
+    let index = 258; // first index of custom glyph name, it is calculated as glyph name index + 258
 
-    _.forEach(font.glyphs, (glyph) => {
+    for (const glyph of font.glyphs) {
         if (glyph.unicode === 0) {
             buf.writeUint16(0); // missed element should have .notDef name in the Macintosh standard order.
         } else {
             buf.writeUint16(index++);
         }
-    });
+    }
 
     // Array of glyph name indexes
-    _.forEach(names, (name) => {
+    for (const name of names) {
         buf.writeBytes(name);
-    });
+    }
 
     return buf;
 }

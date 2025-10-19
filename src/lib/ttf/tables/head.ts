@@ -1,15 +1,16 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/head.htm
 
-import ByteBuffer from "microbuffer";
+import MicroBuffer from "../../microbuffer";
+import type { Font } from "../../sfnt.js";
 
-function dateToUInt64(date) {
-    var startDate = new Date("1904-01-01T00:00:00.000Z");
+function dateToUInt64(date: Date): number {
+    const startDate = new Date("1904-01-01T00:00:00.000Z");
 
-    return Math.floor((date - startDate) / 1000);
+    return Math.floor((date.getTime() - startDate.getTime()) / 1000);
 }
 
-function createHeadTable(font) {
-    var buf = new ByteBuffer(54); // fixed table length
+function createHeadTable(font: Font): MicroBuffer {
+    const buf = new MicroBuffer(54); // fixed table length
 
     buf.writeInt32(0x10000); // version
     buf.writeInt32(font.revision * 0x10000); // fontRevision

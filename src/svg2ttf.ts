@@ -5,8 +5,6 @@
  Written for fontello.com project.
  */
 
-/*eslint-disable no-console*/
-
 import fs from "node:fs";
 import { ArgumentParser } from "argparse";
 import packageJson from "../package.json" with { type: "json" };

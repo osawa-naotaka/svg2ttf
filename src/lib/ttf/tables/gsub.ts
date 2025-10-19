@@ -1,27 +1,29 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/GSUB.htm
 
-import _ from "lodash";
+import MicroBuffer from "../../microbuffer";
+import { identifier } from "../utils.js";
+import type { Font, Glyph } from "../../sfnt.js";
 
-var identifier = require("../utils.js").identifier;
+interface BufferWithOffset extends MicroBuffer {
+    _listOffset?: number;
+}
 
-import ByteBuffer from "microbuffer";
-
-function createScript() {
-    var scriptRecord =
+function createScript(): MicroBuffer {
+    const scriptRecord =
         0 +
         2 + // Script DefaultLangSys Offset
         2; // Script[0] LangSysCount (0)
 
-    var langSys =
+    const langSys =
         0 +
         2 + // Script DefaultLangSys LookupOrder
         2 + // Script DefaultLangSys ReqFeatureIndex
         2 + // Script DefaultLangSys FeatureCount (0?)
         2; // Script Optional Feature Index[0]
 
-    var length = 0 + scriptRecord + langSys;
+    const length = 0 + scriptRecord + langSys;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // Script Record
     // Offset to the start of langSys from the start of scriptRecord
@@ -41,49 +43,46 @@ function createScript() {
     // Note: Adding the same feature to both the optional
     // and the required features is a clear violation of the spec
     // but it fixes IE not displaying the ligatures.
-    // See http://partners.adobe.com/public/developer/opentype/index_table_formats.html, Section “Language System Table”
-    // “FeatureCount: Number of FeatureIndex values for this language system-*excludes the required feature*” (emphasis added)
+    // See http://partners.adobe.com/public/developer/opentype/index_table_formats.html, Section "Language System Table"
+    // "FeatureCount: Number of FeatureIndex values for this language system-*excludes the required feature*" (emphasis added)
     buffer.writeUint16(0);
 
     return buffer;
 }
 
-function createScriptList() {
-    var scriptSize =
+function createScriptList(): MicroBuffer {
+    const scriptSize =
         0 +
         4 + // Tag
         2; // Offset
 
     // tags should be arranged alphabetically
-    var scripts = [
+    const scripts: [string, MicroBuffer][] = [
         ["DFLT", createScript()],
         ["latn", createScript()],
     ];
 
-    var header =
+    const header =
         0 +
         2 + // Script count
         scripts.length * scriptSize;
 
-    var tableLengths = _.reduce(
-        _.map(scripts, (script) => script[1].length),
-        (result, count) => result + count,
-        0,
-    );
+    const tableLengths = scripts.map((script) => script[1].length)
+        .reduce((result, count) => result + count, 0);
 
-    var length = 0 + header + tableLengths;
+    const length = 0 + header + tableLengths;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // Script count
     buffer.writeUint16(scripts.length);
 
     // Write all ScriptRecords
-    var offset = header;
+    let offset = header;
 
-    _.forEach(scripts, (script) => {
-        var name = script[0],
-            table = script[1];
+    for (const script of scripts) {
+        const name = script[0];
+        const table = script[1];
 
         // Script identifier (DFLT/latn)
         buffer.writeUint32(identifier(name));
@@ -91,34 +90,34 @@ function createScriptList() {
         buffer.writeUint16(offset);
         // Increment offset by script table length
         offset += table.length;
-    });
+    }
 
     // Write all ScriptTables
-    _.forEach(scripts, (script) => {
-        var table = script[1];
+    for (const script of scripts) {
+        const table = script[1];
 
         buffer.writeBytes(table.buffer);
-    });
+    }
 
     return buffer;
 }
 
 // Write one feature containing all ligatures
-function createFeatureList() {
-    var header =
+function createFeatureList(): MicroBuffer {
+    const header =
         0 +
         2 + // FeatureCount
         4 + // FeatureTag[0]
         2; // Feature Offset[0]
 
-    var length =
+    const length =
         0 +
         header +
         2 + // FeatureParams[0]
         2 + // LookupCount[0]
         2; // Lookup[0] LookupListIndex[0]
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // FeatureCount
     buffer.writeUint16(1);
@@ -136,16 +135,22 @@ function createFeatureList() {
     return buffer;
 }
 
-function createLigatureCoverage(_font, ligatureGroups) {
-    var glyphCount = ligatureGroups.length;
+interface LigatureGroup {
+    startGlyph: Glyph;
+    codePoint: number;
+    ligatures: any[];
+}
 
-    var length =
+function createLigatureCoverage(_font: Font, ligatureGroups: LigatureGroup[]): MicroBuffer {
+    const glyphCount = ligatureGroups.length;
+
+    const length =
         0 +
         2 + // CoverageFormat
         2 + // GlyphCount
         2 * glyphCount; // GlyphID[i]
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // CoverageFormat
     buffer.writeUint16(1);
@@ -153,111 +158,111 @@ function createLigatureCoverage(_font, ligatureGroups) {
     // Length
     buffer.writeUint16(glyphCount);
 
-    _.forEach(ligatureGroups, (group) => {
+    for (const group of ligatureGroups) {
         buffer.writeUint16(group.startGlyph.id);
-    });
+    }
 
     return buffer;
 }
 
-function createLigatureTable(font, ligature) {
-    var allCodePoints = font.codePoints;
+function createLigatureTable(font: Font, ligature: any): MicroBuffer {
+    const allCodePoints = font.codePoints;
 
-    var unicode = ligature.unicode;
+    const unicode = ligature.unicode;
 
-    var length =
+    const length =
         0 +
         2 + // LigGlyph
         2 + // CompCount
         2 * (unicode.length - 1);
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // LigGlyph
-    var glyph = ligature.glyph;
+    const glyph = ligature.glyph;
 
     buffer.writeUint16(glyph.id);
 
     // CompCount
     buffer.writeUint16(unicode.length);
 
-    // Compound glyphs (excluding first as it’s already in the coverage table)
-    for (var i = 1; i < unicode.length; i++) {
-        glyph = allCodePoints[unicode[i]];
-        buffer.writeUint16(glyph.id);
+    // Compound glyphs (excluding first as it's already in the coverage table)
+    for (let i = 1; i < unicode.length; i++) {
+        const glyphRef = allCodePoints[unicode[i]];
+        buffer.writeUint16(glyphRef.id);
     }
 
     return buffer;
 }
 
-function createLigatureSet(font, _codePoint, ligatures) {
-    var ligatureTables = [];
+function createLigatureSet(font: Font, _codePoint: number, ligatures: any[]): MicroBuffer {
+    const ligatureTables: MicroBuffer[] = [];
 
-    _.forEach(ligatures, (ligature) => {
+    for (const ligature of ligatures) {
         ligatureTables.push(createLigatureTable(font, ligature));
-    });
+    }
 
-    var tableLengths = _.reduce(_.map(ligatureTables, "length"), (result, count) => result + count, 0);
+    const tableLengths = ligatureTables.map(t => t.length).reduce((result, count) => result + count, 0);
 
-    var offset =
+    let offset =
         0 +
         2 + // LigatureCount
         2 * ligatures.length;
 
-    var length = 0 + offset + tableLengths;
+    const length = 0 + offset + tableLengths;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // LigatureCount
     buffer.writeUint16(ligatures.length);
 
     // Ligature offsets
-    _.forEach(ligatureTables, (table) => {
+    for (const table of ligatureTables) {
         // The offset to the current set, from SubstFormat
         buffer.writeUint16(offset);
         offset += table.length;
-    });
+    }
 
     // Ligatures
-    _.forEach(ligatureTables, (table) => {
+    for (const table of ligatureTables) {
         buffer.writeBytes(table.buffer);
-    });
+    }
 
     return buffer;
 }
 
-function createLigatureList(font, ligatureGroups) {
-    var sets = [];
+function createLigatureList(font: Font, ligatureGroups: LigatureGroup[]): MicroBuffer {
+    const sets: MicroBuffer[] = [];
 
-    _.forEach(ligatureGroups, (group) => {
-        var set = createLigatureSet(font, group.codePoint, group.ligatures);
+    for (const group of ligatureGroups) {
+        const set = createLigatureSet(font, group.codePoint, group.ligatures);
 
         sets.push(set);
-    });
+    }
 
-    var setLengths = _.reduce(_.map(sets, "length"), (result, count) => result + count, 0);
+    const setLengths = sets.map(s => s.length).reduce((result, count) => result + count, 0);
 
-    var coverage = createLigatureCoverage(font, ligatureGroups);
+    const coverage = createLigatureCoverage(font, ligatureGroups);
 
-    var tableOffset =
+    const tableOffset =
         0 +
         2 + // Lookup type
         2 + // Lokup flag
         2 + // SubTableCount
         2; // SubTable[0] Offset
 
-    var setOffset =
+    let setOffset =
         0 +
         2 + // SubstFormat
         2 + // Coverage offset
         2 + // LigSetCount
         2 * sets.length; // LigSet Offsets
 
-    var coverageOffset = setOffset + setLengths;
+    const coverageOffset = setOffset + setLengths;
 
-    var length = 0 + tableOffset + coverageOffset + coverage.length;
+    const length = 0 + tableOffset + coverageOffset + coverage.length;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // Lookup type 4 – ligatures
     buffer.writeUint16(4);
@@ -280,15 +285,15 @@ function createLigatureList(font, ligatureGroups) {
     // LigSetCount
     buffer.writeUint16(sets.length);
 
-    _.forEach(sets, (set) => {
+    for (const set of sets) {
         // The offset to the current set, from SubstFormat
         buffer.writeUint16(setOffset);
         setOffset += set.length;
-    });
+    }
 
-    _.forEach(sets, (set) => {
+    for (const set of sets) {
         buffer.writeBytes(set.buffer);
-    });
+    }
 
     buffer.writeBytes(coverage.buffer);
 
@@ -296,48 +301,48 @@ function createLigatureList(font, ligatureGroups) {
 }
 
 // Add a lookup for each ligature
-function createLookupList(font) {
-    var ligatures = font.ligatures;
+function createLookupList(font: Font): MicroBuffer {
+    const ligatures = font.ligatures;
 
-    var groupedLigatures = {};
+    const groupedLigatures: Record<string, any[]> = {};
 
     // Group ligatures by first code point
-    _.forEach(ligatures, (ligature) => {
-        var first = ligature.unicode[0];
+    for (const ligature of ligatures) {
+        const first = ligature.unicode[0];
 
-        if (!_.has(groupedLigatures, first)) {
+        if (!(first in groupedLigatures)) {
             groupedLigatures[first] = [];
         }
         groupedLigatures[first].push(ligature);
-    });
+    }
 
-    var ligatureGroups = [];
+    const ligatureGroups: LigatureGroup[] = [];
 
-    _.forEach(groupedLigatures, (ligatures, codePoint) => {
-        codePoint = parseInt(codePoint, 10);
+    for (const [codePoint, ligatures] of Object.entries(groupedLigatures)) {
+        const codePointNum = Number.parseInt(codePoint, 10);
         // Order ligatures by length, descending
-        // “Ligatures with more components must be stored ahead of those with fewer components in order to be found”
+        // "Ligatures with more components must be stored ahead of those with fewer components in order to be found"
         // From: http://partners.adobe.com/public/developer/opentype/index_tag7.html#liga
         ligatures.sort((ligA, ligB) => ligB.unicode.length - ligA.unicode.length);
         ligatureGroups.push({
-            codePoint: codePoint,
+            codePoint: codePointNum,
             ligatures: ligatures,
-            startGlyph: font.codePoints[codePoint],
+            startGlyph: font.codePoints[codePointNum],
         });
-    });
+    }
 
     ligatureGroups.sort((a, b) => a.startGlyph.id - b.startGlyph.id);
 
-    var offset =
+    const offset =
         0 +
         2 + // Lookup count
         2; // Lookup[0] offset
 
-    var set = createLigatureList(font, ligatureGroups);
+    const set = createLigatureList(font, ligatureGroups);
 
-    var length = 0 + offset + set.length;
+    const length = 0 + offset + set.length;
 
-    var buffer = new ByteBuffer(length);
+    const buffer = new MicroBuffer(length);
 
     // Lookup count
     buffer.writeUint16(1);
@@ -351,39 +356,39 @@ function createLookupList(font) {
     return buffer;
 }
 
-function createGSUB(font) {
-    var scriptList = createScriptList();
-    var featureList = createFeatureList();
-    var lookupList = createLookupList(font);
+function createGSUB(font: Font): MicroBuffer {
+    const scriptList = createScriptList() as BufferWithOffset;
+    const featureList = createFeatureList() as BufferWithOffset;
+    const lookupList = createLookupList(font) as BufferWithOffset;
 
-    var lists = [scriptList, featureList, lookupList];
+    const lists = [scriptList, featureList, lookupList];
 
-    var offset =
+    let offset =
         0 +
         4 + // Version
         2 * lists.length; // List offsets
 
     // Calculate offsets
-    _.forEach(lists, (list) => {
+    for (const list of lists) {
         list._listOffset = offset;
         offset += list.length;
-    });
+    }
 
-    var length = offset;
-    var buffer = new ByteBuffer(length);
+    const length = offset;
+    const buffer = new MicroBuffer(length);
 
     // Version
     buffer.writeUint32(0x00010000);
 
     // Offsets
-    _.forEach(lists, (list) => {
-        buffer.writeUint16(list._listOffset);
-    });
+    for (const list of lists) {
+        buffer.writeUint16(list._listOffset as number);
+    }
 
     // List contents
-    _.forEach(lists, (list) => {
+    for (const list of lists) {
         buffer.writeBytes(list.buffer);
-    });
+    }
 
     return buffer;
 }
