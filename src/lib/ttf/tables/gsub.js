@@ -1,7 +1,9 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/GSUB.htm
 
 import _ from "lodash";
+
 var identifier = require("../utils.js").identifier;
+
 import ByteBuffer from "microbuffer";
 
 function createScript() {
@@ -64,12 +66,8 @@ function createScriptList() {
         scripts.length * scriptSize;
 
     var tableLengths = _.reduce(
-        _.map(scripts, function (script) {
-            return script[1].length;
-        }),
-        function (result, count) {
-            return result + count;
-        },
+        _.map(scripts, (script) => script[1].length),
+        (result, count) => result + count,
         0,
     );
 
@@ -83,7 +81,7 @@ function createScriptList() {
     // Write all ScriptRecords
     var offset = header;
 
-    _.forEach(scripts, function (script) {
+    _.forEach(scripts, (script) => {
         var name = script[0],
             table = script[1];
 
@@ -96,7 +94,7 @@ function createScriptList() {
     });
 
     // Write all ScriptTables
-    _.forEach(scripts, function (script) {
+    _.forEach(scripts, (script) => {
         var table = script[1];
 
         buffer.writeBytes(table.buffer);
@@ -138,7 +136,7 @@ function createFeatureList() {
     return buffer;
 }
 
-function createLigatureCoverage(font, ligatureGroups) {
+function createLigatureCoverage(_font, ligatureGroups) {
     var glyphCount = ligatureGroups.length;
 
     var length =
@@ -155,7 +153,7 @@ function createLigatureCoverage(font, ligatureGroups) {
     // Length
     buffer.writeUint16(glyphCount);
 
-    _.forEach(ligatureGroups, function (group) {
+    _.forEach(ligatureGroups, (group) => {
         buffer.writeUint16(group.startGlyph.id);
     });
 
@@ -192,20 +190,14 @@ function createLigatureTable(font, ligature) {
     return buffer;
 }
 
-function createLigatureSet(font, codePoint, ligatures) {
+function createLigatureSet(font, _codePoint, ligatures) {
     var ligatureTables = [];
 
-    _.forEach(ligatures, function (ligature) {
+    _.forEach(ligatures, (ligature) => {
         ligatureTables.push(createLigatureTable(font, ligature));
     });
 
-    var tableLengths = _.reduce(
-        _.map(ligatureTables, "length"),
-        function (result, count) {
-            return result + count;
-        },
-        0,
-    );
+    var tableLengths = _.reduce(_.map(ligatureTables, "length"), (result, count) => result + count, 0);
 
     var offset =
         0 +
@@ -220,14 +212,14 @@ function createLigatureSet(font, codePoint, ligatures) {
     buffer.writeUint16(ligatures.length);
 
     // Ligature offsets
-    _.forEach(ligatureTables, function (table) {
+    _.forEach(ligatureTables, (table) => {
         // The offset to the current set, from SubstFormat
         buffer.writeUint16(offset);
         offset += table.length;
     });
 
     // Ligatures
-    _.forEach(ligatureTables, function (table) {
+    _.forEach(ligatureTables, (table) => {
         buffer.writeBytes(table.buffer);
     });
 
@@ -237,19 +229,13 @@ function createLigatureSet(font, codePoint, ligatures) {
 function createLigatureList(font, ligatureGroups) {
     var sets = [];
 
-    _.forEach(ligatureGroups, function (group) {
+    _.forEach(ligatureGroups, (group) => {
         var set = createLigatureSet(font, group.codePoint, group.ligatures);
 
         sets.push(set);
     });
 
-    var setLengths = _.reduce(
-        _.map(sets, "length"),
-        function (result, count) {
-            return result + count;
-        },
-        0,
-    );
+    var setLengths = _.reduce(_.map(sets, "length"), (result, count) => result + count, 0);
 
     var coverage = createLigatureCoverage(font, ligatureGroups);
 
@@ -294,13 +280,13 @@ function createLigatureList(font, ligatureGroups) {
     // LigSetCount
     buffer.writeUint16(sets.length);
 
-    _.forEach(sets, function (set) {
+    _.forEach(sets, (set) => {
         // The offset to the current set, from SubstFormat
         buffer.writeUint16(setOffset);
         setOffset += set.length;
     });
 
-    _.forEach(sets, function (set) {
+    _.forEach(sets, (set) => {
         buffer.writeBytes(set.buffer);
     });
 
@@ -316,7 +302,7 @@ function createLookupList(font) {
     var groupedLigatures = {};
 
     // Group ligatures by first code point
-    _.forEach(ligatures, function (ligature) {
+    _.forEach(ligatures, (ligature) => {
         var first = ligature.unicode[0];
 
         if (!_.has(groupedLigatures, first)) {
@@ -327,14 +313,12 @@ function createLookupList(font) {
 
     var ligatureGroups = [];
 
-    _.forEach(groupedLigatures, function (ligatures, codePoint) {
+    _.forEach(groupedLigatures, (ligatures, codePoint) => {
         codePoint = parseInt(codePoint, 10);
         // Order ligatures by length, descending
         // “Ligatures with more components must be stored ahead of those with fewer components in order to be found”
         // From: http://partners.adobe.com/public/developer/opentype/index_tag7.html#liga
-        ligatures.sort(function (ligA, ligB) {
-            return ligB.unicode.length - ligA.unicode.length;
-        });
+        ligatures.sort((ligA, ligB) => ligB.unicode.length - ligA.unicode.length);
         ligatureGroups.push({
             codePoint: codePoint,
             ligatures: ligatures,
@@ -342,9 +326,7 @@ function createLookupList(font) {
         });
     });
 
-    ligatureGroups.sort(function (a, b) {
-        return a.startGlyph.id - b.startGlyph.id;
-    });
+    ligatureGroups.sort((a, b) => a.startGlyph.id - b.startGlyph.id);
 
     var offset =
         0 +
@@ -382,7 +364,7 @@ function createGSUB(font) {
         2 * lists.length; // List offsets
 
     // Calculate offsets
-    _.forEach(lists, function (list) {
+    _.forEach(lists, (list) => {
         list._listOffset = offset;
         offset += list.length;
     });
@@ -394,12 +376,12 @@ function createGSUB(font) {
     buffer.writeUint32(0x00010000);
 
     // Offsets
-    _.forEach(lists, function (list) {
+    _.forEach(lists, (list) => {
         buffer.writeUint16(list._listOffset);
     });
 
     // List contents
-    _.forEach(lists, function (list) {
+    _.forEach(lists, (list) => {
         buffer.writeBytes(list.buffer);
     });
 

@@ -15,7 +15,7 @@ var TTF_NAMES = {
 function tableSize(names) {
     var result = 6; // table header
 
-    _.forEach(names, function (name) {
+    _.forEach(names, (name) => {
         result += 12 + name.data.length; //name header and data
     });
     return result;
@@ -46,11 +46,11 @@ function getNames(font) {
     result.push.apply(result, getStrings(font.description, TTF_NAMES.DESCRIPTION));
     result.push.apply(result, getStrings(font.url, TTF_NAMES.URL_VENDOR));
 
-    _.forEach(font.sfntNames, function (sfntName) {
+    _.forEach(font.sfntNames, (sfntName) => {
         result.push.apply(result, getStrings(sfntName.value, sfntName.id));
     });
 
-    result.sort(function (a, b) {
+    result.sort((a, b) => {
         var orderFields = ["platformID", "encodingID", "languageID", "id"];
         var i;
 
@@ -77,7 +77,7 @@ function createNameTable(font) {
     buf.writeUint16(0); // offset, will be filled later
     var nameOffset = 0;
 
-    _.forEach(names, function (name) {
+    _.forEach(names, (name) => {
         buf.writeUint16(name.platformID); // platformID
         buf.writeUint16(name.encodingID); // platEncID
         buf.writeUint16(name.languageID); // languageID, English (USA)
@@ -89,7 +89,7 @@ function createNameTable(font) {
     var actualStringDataOffset = buf.tell();
 
     //Array of bytes with actual string data
-    _.forEach(names, function (name) {
+    _.forEach(names, (name) => {
         buf.writeBytes(name.data);
     });
 

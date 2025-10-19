@@ -1,16 +1,15 @@
 import _ from "lodash";
 import ByteBuffer from "microbuffer";
-
-import createGSUBTable from "./ttf/tables/gsub.js";
-import createOS2Table from "./ttf/tables/os2.js";
 import createCMapTable from "./ttf/tables/cmap.js";
 import createGlyfTable from "./ttf/tables/glyf.js";
+import createGSUBTable from "./ttf/tables/gsub.js";
 import createHeadTable from "./ttf/tables/head.js";
 import createHHeadTable from "./ttf/tables/hhea.js";
 import createHtmxTable from "./ttf/tables/hmtx.js";
 import createLocaTable from "./ttf/tables/loca.js";
 import createMaxpTable from "./ttf/tables/maxp.js";
 import createNameTable from "./ttf/tables/name.js";
+import createOS2Table from "./ttf/tables/os2.js";
 import createPostTable from "./ttf/tables/post.js";
 
 import * as utils from "./ttf/utils.js";
@@ -71,14 +70,12 @@ function calc_checksum(buf) {
 function generateTTF(font) {
     // Prepare TTF contours objects. Note, that while sfnt countours are classes,
     // ttf contours are just plain arrays of points
-    _.forEach(font.glyphs, function (glyph) {
-        glyph.ttfContours = _.map(glyph.contours, function (contour) {
-            return contour.points;
-        });
+    _.forEach(font.glyphs, (glyph) => {
+        glyph.ttfContours = _.map(glyph.contours, (contour) => contour.points);
     });
 
     // Process ttf contours data
-    _.forEach(font.glyphs, function (glyph) {
+    _.forEach(font.glyphs, (glyph) => {
         // 0.3px accuracy is ok. fo 1000x1000.
         glyph.ttfContours = utils.simplify(glyph.ttfContours, 0.3);
         glyph.ttfContours = utils.simplify(glyph.ttfContours, 0.3); // one pass is not enougth
@@ -96,7 +93,7 @@ function generateTTF(font) {
     var headerSize = 12 + 16 * TABLES.length; // TTF header plus table headers
     var bufSize = headerSize;
 
-    _.forEach(TABLES, function (table) {
+    _.forEach(TABLES, (table) => {
         //store each table in its own buffer
         table.buffer = table.create(font);
         table.length = table.buffer.length;
@@ -108,7 +105,7 @@ function generateTTF(font) {
     //calculate offsets
     var offset = headerSize;
 
-    _.forEach(_.sortBy(TABLES, "order"), function (table) {
+    _.forEach(_.sortBy(TABLES, "order"), (table) => {
         table.offset = offset;
         offset += table.corLength;
     });
@@ -119,7 +116,7 @@ function generateTTF(font) {
 
     //special constants
     var entrySelector = Math.floor(Math.log(TABLES.length) / Math.LN2);
-    var searchRange = Math.pow(2, entrySelector) * 16;
+    var searchRange = 2 ** entrySelector * 16;
     var rangeShift = TABLES.length * 16 - searchRange;
 
     // Add TTF header
@@ -129,7 +126,7 @@ function generateTTF(font) {
     buf.writeUint16(entrySelector);
     buf.writeUint16(rangeShift);
 
-    _.forEach(TABLES, function (table) {
+    _.forEach(TABLES, (table) => {
         buf.writeUint32(utils.identifier(table.innerName)); //inner name
         buf.writeUint32(table.checkSum); //checksum
         buf.writeUint32(table.offset); //offset
@@ -138,7 +135,7 @@ function generateTTF(font) {
 
     var headOffset = 0;
 
-    _.forEach(_.sortBy(TABLES, "order"), function (table) {
+    _.forEach(_.sortBy(TABLES, "order"), (table) => {
         if (table.innerName === "head") {
             //we must store head offset to write font checksum
             headOffset = buf.tell();

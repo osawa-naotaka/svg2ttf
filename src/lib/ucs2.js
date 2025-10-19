@@ -2,7 +2,7 @@ import _ from "lodash";
 
 // Taken from the punycode library
 function ucs2encode(array) {
-    return _.map(array, function (value) {
+    return _.map(array, (value) => {
         var output = "";
 
         if (value > 0xffff) {

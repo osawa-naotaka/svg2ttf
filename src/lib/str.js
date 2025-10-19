@@ -5,7 +5,7 @@ function Str(str) {
 
     this.str = str;
 
-    this.toUTF8Bytes = function () {
+    this.toUTF8Bytes = () => {
         var byteArray = [];
 
         for (var i = 0; i < str.length; i++) {
@@ -22,7 +22,7 @@ function Str(str) {
         return byteArray;
     };
 
-    this.toUCS2Bytes = function () {
+    this.toUCS2Bytes = () => {
         // Code is taken here:
         // http://stackoverflow.com/questions/6226189/how-to-convert-a-string-to-bytearray
         var byteArray = [];

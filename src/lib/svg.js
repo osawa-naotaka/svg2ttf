@@ -1,7 +1,7 @@
-import _ from "lodash";
-import cubic2quad from "cubic2quad";
-import svgpath from "svgpath";
 import { DOMParser } from "@xmldom/xmldom";
+import cubic2quad from "cubic2quad";
+import _ from "lodash";
+import svgpath from "svgpath";
 import ucs2 from "./ucs2.js";
 
 function getGlyph(glyphElem, fontInfo) {
@@ -49,7 +49,7 @@ function deduplicateGlyps(glyphs, ligatures) {
     // Result (the list of unique glyphs)
     var result = [];
 
-    _.forEach(glyphs, function (glyph) {
+    _.forEach(glyphs, (glyph) => {
         // Search for glyphs with the same properties (width and d)
         var canonical = _.find(result, { width: glyph.width, d: glyph.d });
 
@@ -64,7 +64,7 @@ function deduplicateGlyps(glyphs, ligatures) {
     });
 
     // Update ligatures to point to the canonical version
-    _.forEach(ligatures, function (ligature) {
+    _.forEach(ligatures, (ligature) => {
         while (_.has(ligature.glyph, "canonical")) {
             ligature.glyph = ligature.glyph.canonical;
         }
@@ -92,8 +92,7 @@ function load(str) {
     var familyName = fontFaceElem.getAttribute("font-family") || "fontello";
     var subfamilyName = fontFaceElem.getAttribute("font-style") || "Regular";
     var id =
-        fontElem.getAttribute("id") ||
-        (familyName + "-" + subfamilyName).replace(/[\s\(\)\[\]<>%\/]/g, "").substr(0, 62);
+        fontElem.getAttribute("id") || `${familyName}-${subfamilyName}`.replace(/[\s()[\]<>%/]/g, "").substr(0, 62);
 
     var font = {
         id: id,
@@ -103,7 +102,7 @@ function load(str) {
     };
 
     // Doesn't work with complex content like <strong>Copyright:></strong><em>Fontello</em>
-    if (metadata && metadata.textContent) {
+    if (metadata?.textContent) {
         font.metadata = metadata.textContent;
     }
 
@@ -116,7 +115,7 @@ function load(str) {
         vertOriginX: "vert-origin-x",
         vertOriginY: "vert-origin-y",
     };
-    _.forEach(attrs, function (val, key) {
+    _.forEach(attrs, (val, key) => {
         if (fontElem.hasAttribute(val)) {
             font[key] = parseInt(fontElem.getAttribute(val), 10);
         }
@@ -132,7 +131,7 @@ function load(str) {
         underlineThickness: "underline-thickness",
         underlinePosition: "underline-position",
     };
-    _.forEach(attrs, function (val, key) {
+    _.forEach(attrs, (val, key) => {
         if (fontFaceElem.hasAttribute(val)) {
             font[key] = parseInt(fontFaceElem.getAttribute(val), 10);
         }
@@ -156,7 +155,7 @@ function load(str) {
     var glyphs = [];
     var ligatures = [];
 
-    _.forEach(fontElem.getElementsByTagName("glyph"), function (glyphElem) {
+    _.forEach(fontElem.getElementsByTagName("glyph"), (glyphElem) => {
         var glyph = getGlyph(glyphElem, font);
 
         if (_.has(glyph, "ligature")) {
@@ -178,7 +177,7 @@ function load(str) {
     return font;
 }
 
-function cubicToQuad(segment, index, x, y, accuracy) {
+function cubicToQuad(segment, _index, x, y, accuracy) {
     if (segment[0] === "C") {
         var quadCurves = cubic2quad(
             x,
@@ -209,7 +208,7 @@ function toSfntCoutours(svgPath) {
     var resContours = [];
     var resContour = [];
 
-    svgPath.iterate(function (segment, index, x, y) {
+    svgPath.iterate((segment, index, x, y) => {
         //start new contour
         if (index === 0 || segment[0] === "M") {
             resContour = [];

@@ -7,9 +7,9 @@
 
 import _ from "lodash";
 import SvgPath from "svgpath";
-import ucs2 from "./lib/ucs2.js";
-import * as svg from "./lib/svg.js";
 import * as sfnt from "./lib/sfnt.js";
+import * as svg from "./lib/svg.js";
+import ucs2 from "./lib/ucs2.js";
 
 var VERSION_RE = /^(Version )?(\d+[.]\d+)$/i;
 
@@ -33,14 +33,14 @@ function svg2ttf(svgString, options) {
         throw new Error("svg2ttf: version option should be a string");
     }
     if (!VERSION_RE.test(versionString)) {
-        throw new Error('svg2ttf: invalid option, version - "' + options.version + '"');
+        throw new Error(`svg2ttf: invalid option, version - "${options.version}"`);
     }
 
-    versionString = "Version " + versionString.match(VERSION_RE)[2];
+    versionString = `Version ${versionString.match(VERSION_RE)[2]}`;
     font.sfntNames.push({ id: 5, value: versionString }); // version ID for TTF name table
     font.sfntNames.push({
         id: 6,
-        value: (options.fullname || svgFont.id).replace(/[\s\(\)\[\]<>%\/]/g, "").substr(0, 62),
+        value: (options.fullname || svgFont.id).replace(/[\s()[\]<>%/]/g, "").substr(0, 62),
     }); // Postscript name for the font, required for OSX Font Book
 
     if (typeof options.ts !== "undefined") {
@@ -56,7 +56,7 @@ function svg2ttf(svgString, options) {
     font.vertOriginY = svgFont.vertOriginY || 0;
     font.width = svgFont.width || svgFont.unitsPerEm;
     font.height = svgFont.height || svgFont.unitsPerEm;
-    font.descent = !isNaN(svgFont.descent) ? svgFont.descent : -font.vertOriginY;
+    font.descent = !Number.isNaN(svgFont.descent) ? svgFont.descent : -font.vertOriginY;
     font.ascent = svgFont.ascent || font.unitsPerEm - font.vertOriginY;
     // Values for font substitution. We're mostly working with icon fonts, so they aren't expected to be substituted.
     // https://docs.microsoft.com/en-us/typography/opentype/spec/os2#sxheight
@@ -66,7 +66,7 @@ function svg2ttf(svgString, options) {
     if (typeof svgFont.weightClass !== "undefined") {
         var wght = parseInt(svgFont.weightClass, 10);
 
-        if (!isNaN(wght)) font.weightClass = wght;
+        if (!Number.isNaN(wght)) font.weightClass = wght;
         else {
             // Unknown names are silently ignored
             if (svgFont.weightClass === "normal") font.weightClass = 400;
@@ -95,19 +95,19 @@ function svg2ttf(svgString, options) {
     }
 
     // add SVG glyphs to SFNT font
-    _.forEach(svgFont.glyphs, function (svgGlyph) {
+    _.forEach(svgFont.glyphs, (svgGlyph) => {
         var glyph = new sfnt.Glyph();
 
         glyph.name = svgGlyph.name;
         glyph.codes = svgGlyph.ligatureCodes || svgGlyph.unicode; // needed for nice validator error output
         glyph.d = svgGlyph.d;
-        glyph.height = !isNaN(svgGlyph.height) ? svgGlyph.height : font.height;
-        glyph.width = !isNaN(svgGlyph.width) ? svgGlyph.width : font.width;
+        glyph.height = !Number.isNaN(svgGlyph.height) ? svgGlyph.height : font.height;
+        glyph.width = !Number.isNaN(svgGlyph.width) ? svgGlyph.width : font.width;
         glyphs.push(glyph);
 
         svgGlyph.sfntGlyph = glyph;
 
-        _.forEach(svgGlyph.unicode, function (codePoint) {
+        _.forEach(svgGlyph.unicode, (codePoint) => {
             addCodePoint(codePoint, glyph);
         });
     });
@@ -119,12 +119,10 @@ function svg2ttf(svgString, options) {
     if (svgFont.missingGlyph) {
         missingGlyph = new sfnt.Glyph();
         missingGlyph.d = svgFont.missingGlyph.d;
-        missingGlyph.height = !isNaN(svgFont.missingGlyph.height) ? svgFont.missingGlyph.height : font.height;
-        missingGlyph.width = !isNaN(svgFont.missingGlyph.width) ? svgFont.missingGlyph.width : font.width;
+        missingGlyph.height = !Number.isNaN(svgFont.missingGlyph.height) ? svgFont.missingGlyph.height : font.height;
+        missingGlyph.width = !Number.isNaN(svgFont.missingGlyph.width) ? svgFont.missingGlyph.width : font.width;
     } else {
-        missingGlyph = _.find(glyphs, function (glyph) {
-            return glyph.name === ".notdef";
-        });
+        missingGlyph = _.find(glyphs, (glyph) => glyph.name === ".notdef");
     }
     if (!missingGlyph) {
         // no missing glyph and .notdef glyph, we need to create missing glyph
@@ -132,14 +130,14 @@ function svg2ttf(svgString, options) {
     }
 
     // Create glyphs for all characters used in ligatures
-    _.forEach(svgFont.ligatures, function (svgLigature) {
+    _.forEach(svgFont.ligatures, (svgLigature) => {
         var ligature = {
             ligature: svgLigature.ligature,
             unicode: svgLigature.unicode,
             glyph: svgLigature.glyph.sfntGlyph,
         };
 
-        _.forEach(ligature.unicode, function (charPoint) {
+        _.forEach(ligature.unicode, (charPoint) => {
             // We need to have a distinct glyph for each code point so we can reference it in GSUB
             var glyph = new sfnt.Glyph();
             var added = addCodePoint(charPoint, glyph);
@@ -161,12 +159,12 @@ function svg2ttf(svgString, options) {
     var nextID = 0;
 
     //add IDs
-    _.forEach(glyphs, function (glyph) {
+    _.forEach(glyphs, (glyph) => {
         glyph.id = nextID;
         nextID++;
     });
 
-    _.forEach(glyphs, function (glyph) {
+    _.forEach(glyphs, (glyph) => {
         // Calculate accuracy for cubicToQuad transformation
         // For glyphs with height and width smaller than 500 use relative 0.06% accuracy,
         // for larger glyphs use fixed accuracy 0.3.
@@ -178,16 +176,14 @@ function svg2ttf(svgString, options) {
             .abs()
             .unshort()
             .unarc()
-            .iterate(function (segment, index, x, y) {
-                return svg.cubicToQuad(segment, index, x, y, accuracy);
-            });
+            .iterate((segment, index, x, y) => svg.cubicToQuad(segment, index, x, y, accuracy));
         var sfntContours = svg.toSfntCoutours(svgPath);
 
         // Add contours to SFNT font
-        glyph.contours = _.map(sfntContours, function (sfntContour) {
+        glyph.contours = _.map(sfntContours, (sfntContour) => {
             var contour = new sfnt.Contour();
 
-            contour.points = _.map(sfntContour, function (sfntPoint) {
+            contour.points = _.map(sfntContour, (sfntPoint) => {
                 var point = new sfnt.Point();
 
                 point.x = sfntPoint.x;

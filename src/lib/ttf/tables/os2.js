@@ -1,21 +1,16 @@
 // See documentation here: http://www.microsoft.com/typography/otspec/os2.htm
 
 import _ from "lodash";
+
 var identifier = require("../utils.js").identifier;
+
 import ByteBuffer from "microbuffer";
 
 //get first glyph unicode
 function getFirstCharIndex(font) {
     return Math.max(
         0,
-        Math.min(
-            0xffff,
-            Math.abs(
-                _.minBy(Object.keys(font.codePoints), function (point) {
-                    return parseInt(point, 10);
-                }),
-            ),
-        ),
+        Math.min(0xffff, Math.abs(_.minBy(Object.keys(font.codePoints), (point) => parseInt(point, 10)))),
     );
 }
 
@@ -23,27 +18,14 @@ function getFirstCharIndex(font) {
 function getLastCharIndex(font) {
     return Math.max(
         0,
-        Math.min(
-            0xffff,
-            Math.abs(
-                _.maxBy(Object.keys(font.codePoints), function (point) {
-                    return parseInt(point, 10);
-                }),
-            ),
-        ),
+        Math.min(0xffff, Math.abs(_.maxBy(Object.keys(font.codePoints), (point) => parseInt(point, 10)))),
     );
 }
 
 // OpenType spec: https://docs.microsoft.com/en-us/typography/opentype/spec/os2
 function createOS2Table(font) {
     // use at least 2 for ligatures and kerning
-    var maxContext = font.ligatures
-        .map(function (l) {
-            return l.unicode.length;
-        })
-        .reduce(function (a, b) {
-            return Math.max(a, b);
-        }, 2);
+    var maxContext = font.ligatures.map((l) => l.unicode.length).reduce((a, b) => Math.max(a, b), 2);
 
     var buf = new ByteBuffer(96);
 
