@@ -1,3 +1,9 @@
+6.0.6 / 2025-10-26
+------------------
+
+- Updated @xmldom/xmldom dependency to the latest version
+
+
 6.0.5 / 2025-10-20
 ------------------
 
